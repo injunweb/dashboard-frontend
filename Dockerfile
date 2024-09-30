@@ -1,14 +1,16 @@
-FROM node:20-alpine AS build
+FROM node:alpine AS builder
+
 WORKDIR /app
-RUN corepack enable
-COPY package.json yarn.lock ./
-RUN yarn install
 COPY . .
+RUN yarn install --frozen-lockfile
 RUN yarn build
 
 FROM node:alpine
 WORKDIR /app
-COPY --from=build /app/dist ./dist
+
+COPY --from=builder /app/build ./build
+
 RUN yarn global add serve
 
-CMD ["serve", "-s", "dist", "-l", "8080"]
+EXPOSE 3000
+CMD ["serve", "-s", "build", "-l", "3000"]
