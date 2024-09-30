@@ -6,6 +6,6 @@ RUN yarn install --production
 COPY . .
 RUN yarn build
 
-FROM pierrezemb/gostatic:alpine AS serve
+FROM pierrezemb/gostatic:latest AS serve
 COPY --from=build /app/build /srv/http
 CMD ["gostatic", "-port", "8080", "-root", "/srv/http"]
