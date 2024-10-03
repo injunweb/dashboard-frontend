@@ -92,21 +92,6 @@ const ApplicationItem = styled.li`
     }
 `;
 
-const ApplicationButton = styled.button`
-    background: none;
-    color: #1e90ff;
-    border: none;
-    font-size: 14px;
-    cursor: pointer;
-    text-decoration: none;
-    padding: 0;
-    margin: 0;
-
-    &:hover {
-        text-decoration: underline;
-    }
-`;
-
 export const HomePage = () => {
     const [isEditing, setIsEditing] = useState(false);
     const {
