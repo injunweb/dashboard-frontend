@@ -5,6 +5,7 @@ import { getUsers } from "../services/admin.service";
 import styled from "styled-components";
 import { Header } from "../components/Header";
 import { Footer } from "../components/Footer";
+import { Loading } from "../components/Loading";
 
 const Container = styled.div`
     padding: 40px 20px;
@@ -100,20 +101,13 @@ const ErrorMessage = styled.p`
     margin-top: 20px;
 `;
 
-const LoadingMessage = styled.div`
-    text-align: center;
-    font-size: 1.2rem;
-    color: #40a9ff; // 더 밝은 파란색으로 변경
-    margin-top: 50px;
-`;
-
 export const AdminUserListPage = () => {
     const { data, error, isLoading } = useQuery({
         queryKey: ["adminUsers"],
         queryFn: getUsers,
     });
 
-    if (isLoading) return <LoadingMessage>Loading...</LoadingMessage>;
+    if (isLoading) return <Loading />;
     if (error) return <ErrorMessage>Error: {error.message}</ErrorMessage>;
 
     return (

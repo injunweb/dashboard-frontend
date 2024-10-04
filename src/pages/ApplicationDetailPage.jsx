@@ -9,6 +9,7 @@ import {
 import styled from "styled-components";
 import { Header } from "../components/Header";
 import { Footer } from "../components/Footer";
+import { Loading } from "../components/Loading";
 
 const Container = styled.div`
     padding: 40px 20px;
@@ -203,7 +204,7 @@ export const ApplicationDetailPage = () => {
         }
     }, [environmentsData]);
 
-    if (appLoading || envLoading) return <div>Loading...</div>;
+    if (appLoading || envLoading) return <Loading />;
     if (appError || envError || !applicationData?.data) {
         return (
             <Container>

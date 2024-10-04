@@ -6,6 +6,7 @@ import { Link } from "react-router-dom";
 import styled from "styled-components";
 import { Header } from "../components/Header";
 import { Footer } from "../components/Footer";
+import { Loading } from "../components/Loading";
 
 const Container = styled.div`
     padding: 40px 20px;
@@ -171,7 +172,7 @@ export const HomePage = () => {
         setIsEditing(false);
     };
 
-    if (isUserLoading || isAppLoading) return <div>Loading...</div>;
+    if (isUserLoading || isAppLoading) return <Loading />;
     if (appError)
         return <div>Error loading applications: {appError.message}</div>;
 

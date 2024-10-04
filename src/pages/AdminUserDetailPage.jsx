@@ -5,6 +5,7 @@ import { getUser, getApplications } from "../services/admin.service";
 import styled from "styled-components";
 import { Header } from "../components/Header";
 import { Footer } from "../components/Footer";
+import { Loading } from "../components/Loading";
 
 const Container = styled.div`
     padding: 40px 20px;
@@ -110,13 +111,6 @@ const UserInfo = styled.p`
     font-size: 1.1rem;
 `;
 
-const LoadingMessage = styled.div`
-    text-align: center;
-    font-size: 1.2rem;
-    color: #40a9ff;
-    margin-top: 50px;
-`;
-
 export const AdminUserDetailPage = () => {
     const { userId } = useParams();
     const { data: user, isLoading: userLoading } = useQuery({
@@ -129,8 +123,7 @@ export const AdminUserDetailPage = () => {
         enabled: !!user,
     });
 
-    if (userLoading || appLoading)
-        return <LoadingMessage>Loading...</LoadingMessage>;
+    if (userLoading || appLoading) return <Loading />;
 
     if (!user?.data) {
         return (

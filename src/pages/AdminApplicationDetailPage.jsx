@@ -5,6 +5,7 @@ import { getApplication, approveApplication } from "../services/admin.service";
 import styled from "styled-components";
 import { Header } from "../components/Header";
 import { Footer } from "../components/Footer";
+import { Loading } from "../components/Loading";
 
 const Container = styled.div`
     padding: 40px 20px;
@@ -124,13 +125,6 @@ const SuccessMessage = styled(Message)`
     color: #00ff00;
 `;
 
-const LoadingMessage = styled.div`
-    text-align: center;
-    font-size: 1.2rem;
-    color: #40a9ff;
-    margin-top: 50px;
-`;
-
 export const AdminApplicationDetailPage = () => {
     const { appId } = useParams();
     const { data, error, isLoading, refetch } = useQuery({
@@ -143,7 +137,7 @@ export const AdminApplicationDetailPage = () => {
         onSuccess: refetch,
     });
 
-    if (isLoading) return <LoadingMessage>Loading...</LoadingMessage>;
+    if (isLoading) return <Loading />;
     if (error) return <ErrorMessage>Error: {error.message}</ErrorMessage>;
 
     const application = data?.data;
