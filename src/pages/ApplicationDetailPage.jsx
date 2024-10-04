@@ -11,38 +11,85 @@ import { Header } from "../components/Header";
 import { Footer } from "../components/Footer";
 
 const Container = styled.div`
-    padding: 20px;
-    background-color: #000;
+    padding: 40px 20px;
+    background-color: var(--dark, #0a0a0a);
     color: white;
-    min-height: calc(100vh - 80px);
+    min-height: calc(100vh - 60px);
+`;
+
+const ContentWrapper = styled.div`
+    max-width: 1000px;
+    margin: 0 auto;
+    animation: fadeIn 0.5s ease-out;
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+        }
+        to {
+            opacity: 1;
+        }
+    }
 `;
 
 const Title = styled.h1`
-    font-size: 28px;
+    font-size: 2.5rem;
     margin-bottom: 20px;
+    background: linear-gradient(135deg, #1e90ff, #ff007f);
+    -webkit-background-clip: text;
+    color: transparent;
 `;
 
 const Section = styled.div`
-    margin-bottom: 20px;
-    padding: 15px;
-    background-color: #1c1c1e;
-    border-radius: 3px;
-    border: 1px solid #333;
+    margin-bottom: 40px;
+    padding: 30px;
+    background-color: rgba(28, 28, 30, 0.6);
+    border-radius: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    transition: transform 0.3s, box-shadow 0.3s;
+
+    &:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+    }
 `;
 
 const SectionTitle = styled.h2`
-    font-size: 24px;
-    margin-bottom: 10px;
-    border-bottom: 1px solid #333;
-    padding-bottom: 5px;
+    font-size: 1.8rem;
+    margin-bottom: 20px;
+    color: #1e90ff;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 10px;
 `;
 
-const ErrorMessage = styled.p`
-    color: red;
+const Message = styled.p`
+    margin: 15px 0;
+    padding: 10px 15px;
+    border-radius: 10px;
+    font-size: 16px;
+    animation: slideUp 0.5s ease-out;
+
+    @keyframes slideUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
 `;
 
-const SuccessMessage = styled.p`
-    color: green;
+const ErrorMessage = styled(Message)`
+    background-color: rgba(255, 0, 0, 0.1);
+    color: #ff4444;
+`;
+
+const SuccessMessage = styled(Message)`
+    background-color: rgba(0, 255, 0, 0.1);
+    color: #00ff00;
 `;
 
 const EnvironmentList = styled.ul`
@@ -53,50 +100,53 @@ const EnvironmentList = styled.ul`
 const EnvironmentItem = styled.li`
     display: flex;
     align-items: center;
-    background-color: #2c2c2e;
-    padding: 10px;
-    border-radius: 3px;
-    margin-bottom: 10px;
-    border: 1px solid #333;
+    background-color: rgba(44, 44, 46, 0.6);
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: transform 0.3s;
+
+    &:hover {
+        transform: translateX(5px);
+    }
 `;
 
-const KeyInput = styled.input`
+const Input = styled.input`
+    padding: 10px 15px;
     margin-right: 10px;
-    padding: 8px;
-    border: 1px solid #ccc;
-    border-radius: 3px;
-    background-color: #1c1c1e;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 5px;
+    background-color: rgba(28, 28, 30, 0.8);
     color: white;
-`;
+    font-size: 16px;
+    transition: border-color 0.3s;
 
-const ValueInput = styled.input`
-    margin-right: 10px;
-    padding: 8px;
-    border: 1px solid #ccc;
-    border-radius: 3px;
-    background-color: #1c1c1e;
-    color: white;
+    &:focus {
+        outline: none;
+        border-color: #1e90ff;
+    }
 `;
 
 const Button = styled.button`
-    background: linear-gradient(
-        135deg,
-        rgba(255, 0, 127, 0.6),
-        rgba(26, 0, 255, 0.6)
-    );
+    background: linear-gradient(135deg, #1e90ff, #ff007f);
     color: white;
     border: none;
-    padding: 8px 16px;
-    border-radius: 5px;
+    padding: 10px 20px;
+    border-radius: 30px;
     cursor: pointer;
+    font-size: 14px;
+    transition: transform 0.3s, box-shadow 0.3s;
     margin-right: 10px;
 
     &:hover {
-        background: linear-gradient(
-            135deg,
-            rgba(255, 0, 127, 0.8),
-            rgba(26, 0, 255, 0.8)
-        );
+        transform: translateY(-2px);
+        box-shadow: 0 5px 10px rgba(30, 144, 255, 0.3);
+    }
+
+    &:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
     }
 `;
 
@@ -224,112 +274,120 @@ export const ApplicationDetailPage = () => {
         <>
             <Header />
             <Container>
-                <Section>
-                    <Title>{application.name}</Title>
-                    <SectionTitle>Application Details</SectionTitle>
-                    <p>
-                        <strong>Git URL:</strong> {application.git_url}
-                    </p>
-                    <p>
-                        <strong>Branch:</strong> {application.branch}
-                    </p>
-                    <p>
-                        <strong>Port:</strong> {application.port}
-                    </p>
-                    <p>
-                        <strong>Description:</strong> {application.description}
-                    </p>
-                </Section>
+                <ContentWrapper>
+                    <Section>
+                        <Title>{application.name}</Title>
+                        <SectionTitle>Application Details</SectionTitle>
+                        <p>
+                            <strong>Git URL:</strong> {application.git_url}
+                        </p>
+                        <p>
+                            <strong>Branch:</strong> {application.branch}
+                        </p>
+                        <p>
+                            <strong>Port:</strong> {application.port}
+                        </p>
+                        <p>
+                            <strong>Description:</strong>{" "}
+                            {application.description}
+                        </p>
+                    </Section>
 
-                <Section>
-                    <SectionTitle>Environments</SectionTitle>
-                    {errorMessage && (
-                        <ErrorMessage>{errorMessage}</ErrorMessage>
-                    )}
-                    {successMessage && (
-                        <SuccessMessage>{successMessage}</SuccessMessage>
-                    )}
-                    {environments.length > 0 ? (
-                        <EnvironmentList>
-                            {environments.map((env) => (
-                                <EnvironmentItem key={env.key}>
-                                    <KeyInput
-                                        type="text"
-                                        value={env.key}
-                                        readOnly
-                                        placeholder="환경 변수 키"
-                                    />
-                                    <ValueInput
-                                        type={
-                                            visibleFields[env.key]
-                                                ? "text"
-                                                : "password"
-                                        }
-                                        value={env.value}
-                                        onChange={(e) =>
-                                            handleInputChange(
-                                                env.key,
-                                                e.target.value
-                                            )
-                                        }
-                                        placeholder="환경 변수 값"
-                                    />
-                                    <Button
-                                        onClick={() =>
-                                            toggleVisibility(env.key)
-                                        }
-                                    >
-                                        {visibleFields[env.key]
-                                            ? "Hide"
-                                            : "Show"}
-                                    </Button>
-                                    <Button
-                                        onClick={() => handleDeleteEnv(env.key)}
-                                    >
-                                        Delete
-                                    </Button>
-                                </EnvironmentItem>
-                            ))}
-                        </EnvironmentList>
-                    ) : (
-                        <p>이 애플리케이션에 사용할 환경 변수가 없습니다.</p>
-                    )}
+                    <Section>
+                        <SectionTitle>Environments</SectionTitle>
+                        {errorMessage && (
+                            <ErrorMessage>{errorMessage}</ErrorMessage>
+                        )}
+                        {successMessage && (
+                            <SuccessMessage>{successMessage}</SuccessMessage>
+                        )}
+                        {environments.length > 0 ? (
+                            <EnvironmentList>
+                                {environments.map((env) => (
+                                    <EnvironmentItem key={env.key}>
+                                        <Input
+                                            type="text"
+                                            value={env.key}
+                                            readOnly
+                                            placeholder="환경 변수 키"
+                                        />
+                                        <Input
+                                            type={
+                                                visibleFields[env.key]
+                                                    ? "text"
+                                                    : "password"
+                                            }
+                                            value={env.value}
+                                            onChange={(e) =>
+                                                handleInputChange(
+                                                    env.key,
+                                                    e.target.value
+                                                )
+                                            }
+                                            placeholder="환경 변수 값"
+                                        />
+                                        <Button
+                                            onClick={() =>
+                                                toggleVisibility(env.key)
+                                            }
+                                        >
+                                            {visibleFields[env.key]
+                                                ? "Hide"
+                                                : "Show"}
+                                        </Button>
+                                        <Button
+                                            onClick={() =>
+                                                handleDeleteEnv(env.key)
+                                            }
+                                        >
+                                            Delete
+                                        </Button>
+                                    </EnvironmentItem>
+                                ))}
+                            </EnvironmentList>
+                        ) : (
+                            <p>
+                                이 애플리케이션에 사용할 환경 변수가 없습니다.
+                            </p>
+                        )}
 
-                    <div style={{ marginBottom: "20px" }}>
-                        <KeyInput
-                            type="text"
-                            placeholder="새 키 (예: API_KEY)"
-                            value={newEnvKey}
-                            onChange={(e) => setNewEnvKey(e.target.value)}
-                        />
-                        <ValueInput
-                            type="text"
-                            placeholder="새 값 (예: 12345)"
-                            value={newEnvValue}
-                            onChange={(e) => setNewEnvValue(e.target.value)}
-                        />
+                        <div
+                            style={{ marginBottom: "20px", marginTop: "30px" }}
+                        >
+                            <Input
+                                type="text"
+                                placeholder="새 키 (예: API_KEY)"
+                                value={newEnvKey}
+                                onChange={(e) => setNewEnvKey(e.target.value)}
+                            />
+                            <Input
+                                type="text"
+                                placeholder="새 값 (예: 12345)"
+                                value={newEnvValue}
+                                onChange={(e) => setNewEnvValue(e.target.value)}
+                            />
+                            <Button onClick={handleAddEnv}>Add</Button>
+                        </div>
 
-                        <Button onClick={handleAddEnv}>Add</Button>
-                    </div>
-
-                    <Button
-                        onClick={handleUpdate}
-                        disabled={updateEnvironmentsMutation.isLoading}
-                    >
-                        {updateEnvironmentsMutation.isLoading
-                            ? "Updating..."
-                            : "Save"}
-                    </Button>
-                    <Button
-                        onClick={() =>
-                            setEnvironments(
-                                environmentsData?.data?.environments || []
-                            )
-                        }
-                    >
-                        Cancel
-                    </Button>
-                </Section>
+                        <Button
+                            onClick={handleUpdate}
+                            disabled={updateEnvironmentsMutation.isLoading}
+                        >
+                            {updateEnvironmentsMutation.isLoading
+                                ? "Updating..."
+                                : "Save"}
+                        </Button>
+                        <Button
+                            onClick={() =>
+                                setEnvironments(
+                                    environmentsData?.data?.environments || []
+                                )
+                            }
+                        >
+                            Cancel
+                        </Button>
+                    </Section>
+                </ContentWrapper>
             </Container>
             <Footer />
         </>

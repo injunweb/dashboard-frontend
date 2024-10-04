@@ -8,68 +8,90 @@ import { Header } from "../components/Header";
 import { Footer } from "../components/Footer";
 
 const Container = styled.div`
-    padding: 20px;
-    background-color: #000;
+    padding: 40px 20px;
+    background-color: var(--dark, #0a0a0a);
     color: white;
-    min-height: calc(100vh - 80px);
+    min-height: calc(100vh - 60px);
+`;
+
+const ContentWrapper = styled.div`
+    max-width: 1200px;
+    margin: 0 auto;
+    animation: fadeIn 0.5s ease-out;
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+        }
+        to {
+            opacity: 1;
+        }
+    }
 `;
 
 const Title = styled.h1`
-    font-size: 28px;
+    font-size: 2.5rem;
     margin-bottom: 20px;
+    background: linear-gradient(135deg, #1e90ff, #ff007f);
+    -webkit-background-clip: text;
+    color: transparent;
 `;
 
 const Subtitle = styled.h2`
-    font-size: 20px;
-    margin-bottom: 20px;
+    font-size: 1.5rem;
+    margin-bottom: 30px;
     color: #1e90ff;
 `;
 
 const Section = styled.div`
-    margin-bottom: 20px;
-    padding: 15px;
-    background-color: #1c1c1e;
-    border-radius: 3px;
-    border: 1px solid #333;
+    margin-bottom: 40px;
+    padding: 30px;
+    background-color: rgba(28, 28, 30, 0.6);
+    border-radius: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    transition: transform 0.3s, box-shadow 0.3s;
+
+    &:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+    }
 `;
 
 const Input = styled.input`
     display: block;
-    margin: 10px 0;
-    padding: 10px;
+    margin: 15px 0;
+    padding: 15px;
     width: 100%;
-    border: 1px solid #ccc;
-    border-radius: 3px;
-    background-color: #2c2c2e;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    background-color: rgba(44, 44, 46, 0.8);
     color: white;
+    font-size: 16px;
+    transition: border-color 0.3s, transform 0.3s;
 
     &:focus {
         outline: none;
         border-color: #1e90ff;
+        transform: translateY(-2px);
     }
 `;
 
 const Button = styled.button`
-    padding: 2px 4px;
-    margin-top: 10px;
-    margin-right: 10px;
-    background: linear-gradient(
-        135deg,
-        rgba(255, 0, 127, 0.6),
-        rgba(26, 0, 255, 0.6)
-    );
+    padding: 10px 20px;
+    margin-top: 15px;
+    margin-right: 15px;
+    background: linear-gradient(135deg, #1e90ff, #ff007f);
     color: white;
     border: none;
-    border-radius: 2px;
-    font-size: 12px;
+    border-radius: 30px;
+    font-size: 16px;
     cursor: pointer;
+    transition: transform 0.3s, box-shadow 0.3s;
 
     &:hover {
-        background: linear-gradient(
-            135deg,
-            rgba(255, 0, 127, 0.8),
-            rgba(26, 0, 255, 0.8)
-        );
+        transform: translateY(-3px);
+        box-shadow: 0 10px 20px rgba(30, 144, 255, 0.3);
     }
 `;
 
@@ -80,15 +102,39 @@ const ApplicationList = styled.ul`
 `;
 
 const ApplicationItem = styled.li`
-    margin: 10px 0;
-    padding: 10px;
-    background-color: #3a3a3c;
-    border-radius: 3px;
-    border: 1px solid #333;
+    margin: 15px 0;
+    padding: 20px;
+    background-color: rgba(58, 58, 60, 0.6);
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
     cursor: pointer;
+    transition: background-color 0.3s, transform 0.3s;
 
     &:hover {
-        background-color: #444;
+        background-color: rgba(68, 68, 70, 0.8);
+        transform: translateY(-3px);
+    }
+`;
+
+const StyledLink = styled(Link)`
+    color: #1e90ff;
+    text-decoration: none;
+    position: relative;
+
+    &:after {
+        content: "";
+        position: absolute;
+        width: 100%;
+        height: 1px;
+        bottom: -2px;
+        left: 0;
+        background: linear-gradient(135deg, #1e90ff, #ff007f);
+        transform: scaleX(0);
+        transition: transform 0.3s;
+    }
+
+    &:hover:after {
+        transform: scaleX(1);
     }
 `;
 
@@ -133,66 +179,70 @@ export const HomePage = () => {
         <>
             <Header />
             <Container>
-                <Section>
-                    <Title>홈페이지에 오신 것을 환영합니다!</Title>
-                    <Subtitle>
-                        인준웹에서 당신의 애플리케이션을 관리하세요.
-                    </Subtitle>
-                    <p>
-                        현재 사용자: {user?.data?.username} -{" "}
-                        {user?.data?.email}
-                    </p>
-                    {isEditing ? (
-                        <form onSubmit={handleUpdate}>
-                            <Input
-                                name="username"
-                                defaultValue={user?.data?.username}
-                                required
-                            />
-                            <Input
-                                name="email"
-                                defaultValue={user?.data?.email}
-                                required
-                            />
-                            <Button type="submit">정보 수정</Button>
-                            <Button
-                                type="button"
-                                onClick={() => setIsEditing(false)}
-                            >
-                                취소
-                            </Button>
-                        </form>
-                    ) : (
-                        <Button onClick={() => setIsEditing(true)}>
-                            내 정보 수정
-                        </Button>
-                    )}
-                </Section>
-
-                <Section>
-                    <h2>내 애플리케이션</h2>
-                    <Link to="/applications" style={{ color: "#1e90ff" }}>
-                        새로운 애플리케이션 신청하기
-                    </Link>
-                    {!applications?.data?.applications?.length ? (
-                        <p>등록된 애플리케이션이 없습니다.</p>
-                    ) : (
-                        <ApplicationList>
-                            {applications?.data?.applications?.map((app) => (
-                                <ApplicationItem
-                                    key={app.id}
-                                    onClick={() => {
-                                        if (app.status === "Approved") {
-                                            window.location.href = `/applications/${app.id}`;
-                                        }
-                                    }}
+                <ContentWrapper>
+                    <Section>
+                        <Title>홈페이지에 오신 것을 환영합니다!</Title>
+                        <Subtitle>
+                            인준웹에서 당신의 애플리케이션을 관리하세요.
+                        </Subtitle>
+                        <p>
+                            현재 사용자: {user?.data?.username} -{" "}
+                            {user?.data?.email}
+                        </p>
+                        {isEditing ? (
+                            <form onSubmit={handleUpdate}>
+                                <Input
+                                    name="username"
+                                    defaultValue={user?.data?.username}
+                                    required
+                                />
+                                <Input
+                                    name="email"
+                                    defaultValue={user?.data?.email}
+                                    required
+                                />
+                                <Button type="submit">정보 수정</Button>
+                                <Button
+                                    type="button"
+                                    onClick={() => setIsEditing(false)}
                                 >
-                                    {app.name} - {app.status}
-                                </ApplicationItem>
-                            ))}
-                        </ApplicationList>
-                    )}
-                </Section>
+                                    취소
+                                </Button>
+                            </form>
+                        ) : (
+                            <Button onClick={() => setIsEditing(true)}>
+                                내 정보 수정
+                            </Button>
+                        )}
+                    </Section>
+
+                    <Section>
+                        <h2>내 애플리케이션</h2>
+                        <StyledLink to="/applications">
+                            새로운 애플리케이션 신청하기
+                        </StyledLink>
+                        {!applications?.data?.applications?.length ? (
+                            <p>등록된 애플리케이션이 없습니다.</p>
+                        ) : (
+                            <ApplicationList>
+                                {applications?.data?.applications?.map(
+                                    (app) => (
+                                        <ApplicationItem
+                                            key={app.id}
+                                            onClick={() => {
+                                                if (app.status === "Approved") {
+                                                    window.location.href = `/applications/${app.id}`;
+                                                }
+                                            }}
+                                        >
+                                            {app.name} - {app.status}
+                                        </ApplicationItem>
+                                    )
+                                )}
+                            </ApplicationList>
+                        )}
+                    </Section>
+                </ContentWrapper>
             </Container>
             <Footer />
         </>
