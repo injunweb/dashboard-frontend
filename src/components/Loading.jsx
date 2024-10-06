@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import styled from "styled-components";
+import { Header } from "./Header";
+import { Footer } from "./Footer";
 
 const Container = styled.div`
     display: flex;
@@ -63,12 +65,16 @@ export const Loading = () => {
     }, []);
 
     return (
-        <Container>
-            <Logo>injunweb</Logo>
-            <ProgressBarContainer>
-                <ProgressBar style={{ width: `${progress}%` }} />
-            </ProgressBarContainer>
-            <LoadingText>Loading... {Math.round(progress)}%</LoadingText>
-        </Container>
+        <>
+            <Header />
+            <Container>
+                <Logo>injunweb</Logo>
+                <ProgressBarContainer>
+                    <ProgressBar style={{ width: `${progress}%` }} />
+                </ProgressBarContainer>
+                <LoadingText>Loading... {Math.round(progress)}%</LoadingText>
+            </Container>
+            <Footer />
+        </>
     );
 };
