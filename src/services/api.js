@@ -28,6 +28,7 @@ api.interceptors.response.use(
 
             if (error.response.status === 401) {
                 Cookie.remove("authToken");
+                window.location.href = "/login";
             }
         } else if (error.request) {
             console.error("Request error:", error.request);
