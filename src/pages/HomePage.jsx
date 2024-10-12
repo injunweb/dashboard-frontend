@@ -330,11 +330,13 @@ export const HomePage = () => {
                                 <Input
                                     name="username"
                                     defaultValue={user?.data?.username}
+                                    autoComplete="off"
                                     required
                                 />
                                 <Input
                                     name="email"
                                     defaultValue={user?.data?.email}
+                                    autoComplete="off"
                                     required
                                 />
                                 <Button type="submit">정보 수정</Button>

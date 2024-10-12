@@ -220,11 +220,12 @@ export const RegisterPage = () => {
                     <Title>회원가입</Title>
                     <Subtitle>인준웹에 오신 것을 환영합니다!</Subtitle>
                     <Form onSubmit={handleSubmit}>
-                        <Input name="username" placeholder="이름" required />
+                        <Input name="username" placeholder="이름" autoComplete="off" required />
                         <Input
                             name="email"
                             type="email"
                             placeholder="이메일"
+                            autoComplete="off"
                             required
                         />
                         <Input

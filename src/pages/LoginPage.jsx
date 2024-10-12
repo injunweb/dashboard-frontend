@@ -223,6 +223,7 @@ export const LoginPage = () => {
                             name="username"
                             type="text"
                             placeholder="아이디"
+                            autoComplete="off"
                             required
                         />
                         <Input
