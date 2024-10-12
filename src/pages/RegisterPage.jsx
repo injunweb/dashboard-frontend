@@ -240,7 +240,7 @@ export const RegisterPage = () => {
                     </Form>
                     {mutation.isLoading && <Message>등록 중...</Message>}
                     {mutation.isError && (
-                        <Message error>오류: {mutation.error.message}</Message>
+                        <Message $error>오류: {mutation.error.message}</Message>
                     )}
                     {mutation.isSuccess && <Message>회원가입 성공!</Message>}
                     <LoginLink>
