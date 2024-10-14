@@ -220,11 +220,12 @@ export const RegisterPage = () => {
                     <Title>회원가입</Title>
                     <Subtitle>인준웹에 오신 것을 환영합니다!</Subtitle>
                     <Form onSubmit={handleSubmit}>
-                        <Input name="username" placeholder="이름" required />
+                        <Input name="username" placeholder="이름" autoComplete="off" required />
                         <Input
                             name="email"
                             type="email"
                             placeholder="이메일"
+                            autoComplete="off"
                             required
                         />
                         <Input
@@ -239,7 +240,7 @@ export const RegisterPage = () => {
                     </Form>
                     {mutation.isLoading && <Message>등록 중...</Message>}
                     {mutation.isError && (
-                        <Message error>오류: {mutation.error.message}</Message>
+                        <Message $error>오류: {mutation.error.message}</Message>
                     )}
                     {mutation.isSuccess && <Message>회원가입 성공!</Message>}
                     <LoginLink>

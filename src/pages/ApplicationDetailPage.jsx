@@ -343,6 +343,7 @@ export const ApplicationDetailPage = () => {
                                                     e.target.value
                                                 )
                                             }
+                                            autoComplete="off"
                                             placeholder="환경 변수 값"
                                         />
                                         <IconButton
@@ -411,12 +412,14 @@ export const ApplicationDetailPage = () => {
                             <Input
                                 type="text"
                                 placeholder="새 키 (예: API_KEY)"
+                                autoComplete="off"
                                 value={newEnvKey}
                                 onChange={(e) => setNewEnvKey(e.target.value)}
                             />
                             <Input
                                 type="text"
                                 placeholder="새 값 (예: 12345)"
+                                autoComplete="off"
                                 value={newEnvValue}
                                 onChange={(e) => setNewEnvValue(e.target.value)}
                             />

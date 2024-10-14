@@ -167,6 +167,7 @@ export const ApplicationSubmitPage = () => {
                                 type="text"
                                 pattern="[a-z0-9\-]+"
                                 placeholder="애플리케이션 이름 (영문 소문자, 숫자, - 사용가능)"
+                                autoComplete="off"
                                 required
                             />
                         </InputWrapper>
@@ -175,6 +176,7 @@ export const ApplicationSubmitPage = () => {
                                 name="port"
                                 type="number"
                                 placeholder="애플리케이션 포트 (예: 3000)"
+                                autoComplete="off"
                                 required
                             />
                         </InputWrapper>
@@ -183,6 +185,7 @@ export const ApplicationSubmitPage = () => {
                                 name="git_url"
                                 type="url"
                                 placeholder="Git URL (예: https://github.com/username/repo)"
+                                autoComplete="off"
                                 required
                             />
                         </InputWrapper>
@@ -191,6 +194,7 @@ export const ApplicationSubmitPage = () => {
                                 name="branch"
                                 type="text"
                                 placeholder="Git 브랜치 (예: main, dev)"
+                                autoComplete="off"
                                 required
                             />
                         </InputWrapper>
@@ -198,6 +202,7 @@ export const ApplicationSubmitPage = () => {
                             <Textarea
                                 name="description"
                                 placeholder="설명 (애플리케이션에 대한 간단한 설명)"
+                                autoComplete="off"
                                 required
                             />
                         </InputWrapper>

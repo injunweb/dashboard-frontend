@@ -223,6 +223,7 @@ export const LoginPage = () => {
                             name="username"
                             type="text"
                             placeholder="아이디"
+                            autoComplete="off"
                             required
                         />
                         <Input
@@ -237,7 +238,7 @@ export const LoginPage = () => {
                     </Form>
                     {mutation.isLoading && <Message>로그인 중...</Message>}
                     {mutation.isError && (
-                        <Message error>오류: {mutation.error.message}</Message>
+                        <Message $error>오류: {mutation.error.message}</Message>
                     )}
                     <RegisterLink>
                         계정이 없으신가요? <Link to="/register">회원가입</Link>
