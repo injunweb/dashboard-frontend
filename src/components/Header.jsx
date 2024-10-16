@@ -2,6 +2,8 @@ import React from "react";
 import { Link } from "react-router-dom";
 import styled from "styled-components";
 import logo from "/logo.svg";
+import { Notifications } from "./Notifications";
+import { isLoggedIn } from "../utils/auth";
 
 const HeaderContainer = styled.header`
     position: fixed;
@@ -57,6 +59,7 @@ export const Header = () => {
                 <Logo src={logo} alt="InjunWeb Logo" />
                 <Title>injunweb</Title>
             </Link>
+            {isLoggedIn() && <Notifications />}
         </HeaderContainer>
     );
 };

@@ -8,6 +8,7 @@ import {
 import { Link } from "react-router-dom";
 import styled from "styled-components";
 import { Header } from "../components/Header";
+import { SubscriptionPrompt } from "../components/SubscriptionPrompt";
 import { Footer } from "../components/Footer";
 import { Loading } from "../components/Loading";
 import { toast } from "react-toastify";
@@ -314,6 +315,7 @@ export const HomePage = () => {
     return (
         <>
             <Header />
+            <SubscriptionPrompt />
             <Container>
                 <ContentWrapper>
                     <Section>
