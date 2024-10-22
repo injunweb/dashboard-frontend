@@ -1,176 +1,39 @@
-import React, { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { getApplication } from "../services/application.service";
-import {
-    getEnvironments,
-    updateEnvironment,
-} from "../services/environment.service";
+import React, { useState, useEffect, useRef } from "react";
+import { useParams, Link, useNavigate } from "react-router-dom";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import styled from "styled-components";
-import { Header } from "../components/Header";
-import { Footer } from "../components/Footer";
-import { Loading } from "../components/Loading";
-
-const Container = styled.div`
-    padding: 40px 20px;
-    background-color: var(--dark, #0a0a0a);
-    color: white;
-    min-height: calc(100vh - 60px);
-`;
-
-const ContentWrapper = styled.div`
-    max-width: 1000px;
-    margin: 0 auto;
-    animation: fadeIn 0.5s ease-out;
-
-    @keyframes fadeIn {
-        from {
-            opacity: 0;
-        }
-        to {
-            opacity: 1;
-        }
-    }
-`;
-
-const Title = styled.h1`
-    font-size: 2.5rem;
-    margin-bottom: 20px;
-    background: linear-gradient(135deg, #1e90ff, #ff007f);
-    -webkit-background-clip: text;
-    color: transparent;
-`;
-
-const Section = styled.div`
-    margin-bottom: 40px;
-    padding: 30px;
-    background-color: rgba(28, 28, 30, 0.6);
-    border-radius: 15px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(10px);
-    transition: transform 0.3s, box-shadow 0.3s;
-
-    &:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
-    }
-`;
-
-const SectionTitle = styled.h2`
-    font-size: 1.8rem;
-    margin-bottom: 20px;
-    color: #1e90ff;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    padding-bottom: 10px;
-`;
-
-const Message = styled.p`
-    margin: 15px 0;
-    padding: 10px 15px;
-    border-radius: 10px;
-    font-size: 16px;
-    animation: slideUp 0.5s ease-out;
-
-    @keyframes slideUp {
-        from {
-            opacity: 0;
-            transform: translateY(20px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-`;
-
-const ErrorMessage = styled(Message)`
-    background-color: rgba(255, 0, 0, 0.1);
-    color: #ff4444;
-`;
-
-const SuccessMessage = styled(Message)`
-    background-color: rgba(0, 255, 0, 0.1);
-    color: #00ff00;
-`;
-
-const EnvironmentList = styled.ul`
-    list-style: none;
-    padding: 0;
-`;
-
-const EnvironmentItem = styled.li`
-    display: flex;
-    align-items: center;
-    background-color: rgba(44, 44, 46, 0.6);
-    padding: 15px;
-    border-radius: 10px;
-    margin-bottom: 15px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    transition: transform 0.3s;
-
-    &:hover {
-        transform: translateX(5px);
-    }
-`;
-
-const Input = styled.input`
-    padding: 10px 15px;
-    margin-right: 10px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 5px;
-    background-color: rgba(28, 28, 30, 0.8);
-    color: white;
-    font-size: 16px;
-    transition: border-color 0.3s;
-
-    &:focus {
-        outline: none;
-        border-color: #1e90ff;
-    }
-`;
-
-const Button = styled.button`
-    background: linear-gradient(135deg, #1e90ff, #ff007f);
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 30px;
-    cursor: pointer;
-    font-size: 14px;
-    transition: transform 0.3s, box-shadow 0.3s;
-    margin-right: 10px;
-
-    &:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 5px 10px rgba(30, 144, 255, 0.3);
-    }
-
-    &:disabled {
-        opacity: 0.7;
-        cursor: not-allowed;
-    }
-`;
-
-const IconButton = styled.button`
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 5px;
-    margin-left: 10px;
-    color: #ffffff;
-    transition: color 0.3s;
-
-    &:hover {
-        color: #1e90ff;
-    }
-
-    &:focus {
-        outline: none;
-    }
-`;
+import {
+    getApplication,
+    deleteApplication,
+    addExtraHostname,
+    deleteExtraHostname,
+} from "../services/application";
+import { getEnvironments, updateEnvironment } from "../services/environment";
+import Loading from "../components/Loading";
+import {
+    Eye,
+    EyeOff,
+    Trash2,
+    Plus,
+    Save,
+    X,
+    ArrowLeft,
+    GitBranch,
+    Clock,
+    Loader,
+    AlertTriangle,
+    MoreVertical,
+    Globe,
+    Info,
+} from "lucide-react";
 
 export const ApplicationDetailPage = () => {
     const { appId } = useParams();
+    const navigate = useNavigate();
+    const queryClient = useQueryClient();
+    const [showMenu, setShowMenu] = useState(false);
+    const menuRef = useRef(null);
+
     const {
         data: applicationData,
         error: appError,
@@ -180,6 +43,8 @@ export const ApplicationDetailPage = () => {
         queryFn: () => getApplication(appId),
     });
 
+    const isPending = applicationData?.status.toLowerCase() === "pending";
+
     const {
         data: environmentsData,
         error: envError,
@@ -188,6 +53,7 @@ export const ApplicationDetailPage = () => {
     } = useQuery({
         queryKey: ["applicationEnvironments", appId],
         queryFn: () => getEnvironments(appId),
+        enabled: !isPending,
     });
 
     const [environments, setEnvironments] = useState([]);
@@ -196,42 +62,89 @@ export const ApplicationDetailPage = () => {
     const [visibleFields, setVisibleFields] = useState({});
     const [errorMessage, setErrorMessage] = useState("");
     const [successMessage, setSuccessMessage] = useState("");
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [newHostname, setNewHostname] = useState("");
+    const [showHostnameInfo, setShowHostnameInfo] = useState(false);
 
     const updateEnvironmentsMutation = useMutation({
         mutationFn: (updatedEnvs) => updateEnvironment(appId, updatedEnvs),
         onSuccess: () => {
             refetch();
-            setNewEnvKey("");
-            setNewEnvValue("");
+            resetNewEnvInputs();
             setSuccessMessage("환경 변수가 성공적으로 업데이트되었습니다.");
             setErrorMessage("");
             setTimeout(() => setSuccessMessage(""), 3000);
         },
         onError: (error) => {
-            setErrorMessage(
-                error.response?.data?.error || "환경 변수 업데이트 실패"
-            );
+            setErrorMessage(error.response?.error || "환경 변수 업데이트 실패");
             setSuccessMessage("");
             setTimeout(() => setErrorMessage(""), 3000);
         },
     });
 
+    const deleteApplicationMutation = useMutation({
+        mutationFn: deleteApplication,
+        onSuccess: () => {
+            navigate("/applications");
+        },
+        onError: (error) => {
+            setErrorMessage(error.response?.error || "애플리케이션 삭제 실패");
+            setTimeout(() => setErrorMessage(""), 3000);
+        },
+    });
+
+    const addHostnameMutation = useMutation({
+        mutationFn: (hostname) => addExtraHostname(appId, hostname),
+        onSuccess: () => {
+            queryClient.invalidateQueries(["application", appId]);
+            setNewHostname("");
+            setSuccessMessage("호스트네임이 성공적으로 추가되었습니다.");
+            setTimeout(() => setSuccessMessage(""), 3000);
+        },
+        onError: (error) => {
+            setErrorMessage(error.response?.error || "호스트네임 추가 실패");
+            setTimeout(() => setErrorMessage(""), 3000);
+        },
+    });
+
+    const deleteHostnameMutation = useMutation({
+        mutationFn: (hostname) => deleteExtraHostname(appId, hostname),
+        onSuccess: () => {
+            queryClient.invalidateQueries(["application", appId]);
+            setSuccessMessage("호스트네임이 성공적으로 삭제되었습니다.");
+            setTimeout(() => setSuccessMessage(""), 3000);
+        },
+        onError: (error) => {
+            setErrorMessage(error.response?.error || "호스트네임 삭제 실패");
+            setTimeout(() => setErrorMessage(""), 3000);
+        },
+    });
+
     useEffect(() => {
-        if (environmentsData?.data?.environments) {
-            setEnvironments(environmentsData.data.environments);
+        if (environmentsData?.environments) {
+            setEnvironments(environmentsData.environments);
         }
     }, [environmentsData]);
 
-    if (appLoading || envLoading) return <Loading />;
-    if (appError || envError || !applicationData?.data) {
-        return (
-            <Container>
-                <Title>Application Not Found</Title>
-            </Container>
-        );
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (menuRef.current && !menuRef.current.contains(event.target)) {
+                setShowMenu(false);
+            }
+        };
+
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
+    }, []);
+
+    if (appLoading) return <Loading />;
+    if (appError || !applicationData) {
+        return <ErrorDisplay message="Application Not Found" />;
     }
 
-    const application = applicationData.data;
+    const application = applicationData;
 
     const handleInputChange = (key, value) => {
         setEnvironments((prev) =>
@@ -257,8 +170,7 @@ export const ApplicationDetailPage = () => {
                 ...prev,
                 { key: newEnvKey, value: newEnvValue },
             ]);
-            setNewEnvKey("");
-            setNewEnvValue("");
+            resetNewEnvInputs();
             setErrorMessage("");
         }
     };
@@ -281,172 +193,812 @@ export const ApplicationDetailPage = () => {
         }
 
         updateEnvironmentsMutation.mutate(updatedEnvs);
-        setNewEnvKey("");
-        setNewEnvValue("");
     };
 
     const toggleVisibility = (key) => {
         setVisibleFields((prev) => ({ ...prev, [key]: !prev[key] }));
     };
 
-    return (
-        <>
-            <Header />
-            <Container>
-                <ContentWrapper>
-                    <Section>
-                        <Title>{application.name}</Title>
-                        <SectionTitle>Application Details</SectionTitle>
-                        <p>
-                            <strong>Git URL:</strong> {application.git_url}
-                        </p>
-                        <p>
-                            <strong>Branch:</strong> {application.branch}
-                        </p>
-                        <p>
-                            <strong>Port:</strong> {application.port}
-                        </p>
-                        <p>
-                            <strong>Description:</strong>{" "}
-                            {application.description}
-                        </p>
-                    </Section>
+    const handleCancel = () => {
+        setEnvironments(environmentsData?.environments || []);
+        resetNewEnvInputs();
+    };
 
-                    <Section>
-                        <SectionTitle>Environments</SectionTitle>
+    const resetNewEnvInputs = () => {
+        setNewEnvKey("");
+        setNewEnvValue("");
+    };
+
+    const handleMenuToggle = () => {
+        setShowMenu(!showMenu);
+    };
+
+    const handleDeleteClick = () => {
+        setShowMenu(false);
+        setShowDeleteConfirm(true);
+    };
+
+    const handleDeleteConfirm = () => {
+        deleteApplicationMutation.mutate(appId);
+    };
+
+    const handleAddHostname = () => {
+        if (newHostname) {
+            addHostnameMutation.mutate(newHostname);
+        }
+    };
+
+    const handleDeleteHostname = (hostname) => {
+        deleteHostnameMutation.mutate(hostname);
+    };
+
+    return (
+        <Container>
+            <Header>
+                <Title>애플리케이션 상세</Title>
+                <BackLink to="/applications">
+                    <ArrowLeft size={16} />
+                    애플리케이션 목록으로 돌아가기
+                </BackLink>
+            </Header>
+            <ContentWrapper>
+                <Card>
+                    <CardHeader>
+                        <CardTitle>애플리케이션 정보</CardTitle>
+                        <MenuWrapper ref={menuRef}>
+                            <MenuButton onClick={handleMenuToggle}>
+                                <MoreVertical size={20} />
+                            </MenuButton>
+                            {showMenu && (
+                                <Menu>
+                                    <MenuItem onClick={handleDeleteClick}>
+                                        <Trash2 size={16} />
+                                        애플리케이션 삭제
+                                    </MenuItem>
+                                </Menu>
+                            )}
+                        </MenuWrapper>
+                    </CardHeader>
+                    <AppNameRow>
+                        <AppName>{application.name}</AppName>
+                        <AppStatus status={application.status}>
+                            {application.status}
+                        </AppStatus>
+                    </AppNameRow>
+                    <DetailGrid>
+                        <DetailItem>
+                            <DetailLabel>GIT URL</DetailLabel>
+                            <DetailValue>{application.git_url}</DetailValue>
+                        </DetailItem>
+                        <DetailItem>
+                            <DetailLabel>BRANCH</DetailLabel>
+                            <DetailValue>{application.branch}</DetailValue>
+                        </DetailItem>
+                        <DetailItem>
+                            <DetailLabel>PORT</DetailLabel>
+                            <DetailValue>{application.port}</DetailValue>
+                        </DetailItem>
+                        <DetailItem>
+                            <DetailLabel>PRIMARY HOSTNAME</DetailLabel>
+                            <DetailValue>
+                                {application.primary_hostname}
+                            </DetailValue>
+                        </DetailItem>
+                    </DetailGrid>
+                    <CardFooter>
+                        <RepoLink
+                            href={application.git_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                        >
+                            <GitBranch size={14} />
+                            Repository
+                        </RepoLink>
+                        <CreatedAt>
+                            <Clock size={14} />
+                            {new Date(
+                                application.created_at
+                            ).toLocaleDateString()}
+                        </CreatedAt>
+                    </CardFooter>
+                    <Description>{application.description}</Description>
+                </Card>
+
+                {!isPending && (
+                    <Card>
+                        <CardTitle>환경 변수</CardTitle>
+                        {envLoading ? (
+                            <Loading />
+                        ) : envError ? (
+                            <ErrorMessage>
+                                환경 변수를 불러오는데 실패했습니다.
+                            </ErrorMessage>
+                        ) : (
+                            <>
+                                <EnvironmentList>
+                                    {environments.map((env) => (
+                                        <EnvironmentItem key={env.key}>
+                                            <EnvInput
+                                                type="text"
+                                                value={env.key}
+                                                readOnly
+                                            />
+                                            <EnvInput
+                                                type={
+                                                    visibleFields[env.key]
+                                                        ? "text"
+                                                        : "password"
+                                                }
+                                                value={env.value}
+                                                onChange={(e) =>
+                                                    handleInputChange(
+                                                        env.key,
+                                                        e.target.value
+                                                    )
+                                                }
+                                            />
+                                            <IconButton
+                                                onClick={() =>
+                                                    toggleVisibility(env.key)
+                                                }
+                                            >
+                                                {visibleFields[env.key] ? (
+                                                    <EyeOff size={18} />
+                                                ) : (
+                                                    <Eye size={18} />
+                                                )}
+                                            </IconButton>
+                                            <IconButton
+                                                onClick={() =>
+                                                    handleDeleteEnv(env.key)
+                                                }
+                                            >
+                                                <Trash2 size={18} />
+                                            </IconButton>
+                                        </EnvironmentItem>
+                                    ))}
+                                </EnvironmentList>
+                                <AddEnvForm>
+                                    <EnvInput
+                                        type="text"
+                                        placeholder="새 키"
+                                        value={newEnvKey}
+                                        onChange={(e) =>
+                                            setNewEnvKey(e.target.value)
+                                        }
+                                    />
+                                    <EnvInput
+                                        type="text"
+                                        placeholder="새 값"
+                                        value={newEnvValue}
+                                        onChange={(e) =>
+                                            setNewEnvValue(e.target.value)
+                                        }
+                                    />
+                                    <AddButton onClick={handleAddEnv}>
+                                        <Plus size={18} /> 추가
+                                    </AddButton>
+                                </AddEnvForm>
+                                <ActionButtons>
+                                    <SaveButton
+                                        onClick={handleUpdate}
+                                        disabled={
+                                            updateEnvironmentsMutation.isPending
+                                        }
+                                    >
+                                        {updateEnvironmentsMutation.isPending ? (
+                                            <>
+                                                <Loader
+                                                    size={18}
+                                                    className="animate-spin"
+                                                />
+                                                저장 중...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Save size={18} />
+                                                변경사항 저장
+                                            </>
+                                        )}
+                                    </SaveButton>
+                                    <CancelButton onClick={handleCancel}>
+                                        <X size={18} /> 취소
+                                    </CancelButton>
+                                </ActionButtons>
+                            </>
+                        )}
+                    </Card>
+                )}
+
+                {!isPending && (
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>사용자 정의 호스트네임</CardTitle>
+                            <InfoIcon
+                                onClick={() =>
+                                    setShowHostnameInfo(!showHostnameInfo)
+                                }
+                            >
+                                <Info size={20} />
+                            </InfoIcon>
+                        </CardHeader>
+                        {showHostnameInfo && (
+                            <InfoBox>
+                                사용자 정의 호스트네임을 추가하려면 먼저 DNS에
+                                <strong>{application.primary_hostname}</strong>
+                                을 CNAME으로 등록해야 합니다. 이렇게 하면 사용자
+                                정의 도메인으로 애플리케이션에 접근할 수
+                                있습니다.
+                            </InfoBox>
+                        )}
                         {errorMessage && (
                             <ErrorMessage>{errorMessage}</ErrorMessage>
                         )}
                         {successMessage && (
                             <SuccessMessage>{successMessage}</SuccessMessage>
                         )}
-                        {environments.length > 0 ? (
-                            <EnvironmentList>
-                                {environments.map((env) => (
-                                    <EnvironmentItem key={env.key}>
-                                        <Input
-                                            type="text"
-                                            value={env.key}
-                                            readOnly
-                                            placeholder="환경 변수 키"
-                                        />
-                                        <Input
-                                            type={
-                                                visibleFields[env.key]
-                                                    ? "text"
-                                                    : "password"
-                                            }
-                                            value={env.value}
-                                            onChange={(e) =>
-                                                handleInputChange(
-                                                    env.key,
-                                                    e.target.value
-                                                )
-                                            }
-                                            autoComplete="off"
-                                            placeholder="환경 변수 값"
-                                        />
-                                        <IconButton
-                                            onClick={() =>
-                                                toggleVisibility(env.key)
-                                            }
-                                        >
-                                            {visibleFields[env.key] ? (
-                                                <svg
-                                                    width="24"
-                                                    height="24"
-                                                    viewBox="0 0 24 24"
-                                                    fill="none"
-                                                    xmlns="http://www.w3.org/2000/svg"
-                                                >
-                                                    <path
-                                                        d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"
-                                                        fill="currentColor"
-                                                    />
-                                                </svg>
-                                            ) : (
-                                                <svg
-                                                    width="24"
-                                                    height="24"
-                                                    viewBox="0 0 24 24"
-                                                    fill="none"
-                                                    xmlns="http://www.w3.org/2000/svg"
-                                                >
-                                                    <path
-                                                        d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z"
-                                                        fill="currentColor"
-                                                    />
-                                                </svg>
-                                            )}
-                                        </IconButton>
-                                        <IconButton
-                                            onClick={() =>
-                                                handleDeleteEnv(env.key)
-                                            }
-                                        >
-                                            <svg
-                                                width="24"
-                                                height="24"
-                                                viewBox="0 0 24 24"
-                                                fill="none"
-                                                xmlns="http://www.w3.org/2000/svg"
-                                            >
-                                                <path
-                                                    d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"
-                                                    fill="currentColor"
-                                                />
-                                            </svg>
-                                        </IconButton>
-                                    </EnvironmentItem>
-                                ))}
-                            </EnvironmentList>
-                        ) : (
-                            <p>
-                                이 애플리케이션에 사용할 환경 변수가 없습니다.
-                            </p>
-                        )}
-
-                        <div
-                            style={{ marginBottom: "20px", marginTop: "30px" }}
-                        >
-                            <Input
+                        <HostnameList>
+                            {application.extra_hostnames?.map((hostname) => (
+                                <HostnameItem key={hostname}>
+                                    <Globe size={14} />
+                                    <HostnameText>{hostname}</HostnameText>
+                                    <DeleteButton
+                                        onClick={() =>
+                                            handleDeleteHostname(hostname)
+                                        }
+                                    >
+                                        <Trash2 size={14} />
+                                    </DeleteButton>
+                                </HostnameItem>
+                            ))}
+                        </HostnameList>
+                        <AddHostnameForm>
+                            <EnvInput
                                 type="text"
-                                placeholder="새 키 (예: API_KEY)"
-                                autoComplete="off"
-                                value={newEnvKey}
-                                onChange={(e) => setNewEnvKey(e.target.value)}
+                                placeholder="새 호스트네임"
+                                value={newHostname}
+                                onChange={(e) => setNewHostname(e.target.value)}
                             />
-                            <Input
-                                type="text"
-                                placeholder="새 값 (예: 12345)"
-                                autoComplete="off"
-                                value={newEnvValue}
-                                onChange={(e) => setNewEnvValue(e.target.value)}
-                            />
-                            <Button onClick={handleAddEnv}>Add</Button>
-                        </div>
+                            <AddButton
+                                onClick={handleAddHostname}
+                                disabled={addHostnameMutation.isPending}
+                            >
+                                {addHostnameMutation.isPending ? (
+                                    <Loader
+                                        size={18}
+                                        className="animate-spin"
+                                    />
+                                ) : (
+                                    <Plus size={18} />
+                                )}
+                                추가
+                            </AddButton>
+                        </AddHostnameForm>
+                    </Card>
+                )}
+            </ContentWrapper>
 
-                        <Button
-                            onClick={handleUpdate}
-                            disabled={updateEnvironmentsMutation.isLoading}
-                        >
-                            {updateEnvironmentsMutation.isLoading
-                                ? "Updating..."
-                                : "Save"}
-                        </Button>
-                        <Button
-                            onClick={() =>
-                                setEnvironments(
-                                    environmentsData?.data?.environments || []
-                                )
-                            }
-                        >
-                            Cancel
-                        </Button>
-                    </Section>
-                </ContentWrapper>
-            </Container>
-            <Footer />
-        </>
+            {showDeleteConfirm && (
+                <ConfirmModal>
+                    <ModalContent>
+                        <AlertTriangle size={48} color="#ef4444" />
+                        <h2>애플리케이션 삭제</h2>
+                        <p>
+                            정말로 이 애플리케이션을 삭제하시겠습니까? 이 작업은
+                            되돌릴 수 없습니다.
+                        </p>
+                        <ModalButtons>
+                            <ConfirmButton onClick={handleDeleteConfirm}>
+                                삭제
+                            </ConfirmButton>
+                            <CancelButton
+                                onClick={() => setShowDeleteConfirm(false)}
+                            >
+                                취소
+                            </CancelButton>
+                        </ModalButtons>
+                    </ModalContent>
+                </ConfirmModal>
+            )}
+        </Container>
     );
 };
+
+const Container = styled.div`
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 40px 20px;
+    color: #ffffff;
+    min-height: 100vh;
+    font-family: "Arial", sans-serif;
+`;
+
+const Header = styled.div`
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 40px;
+`;
+
+const Title = styled.h1`
+    font-size: 28px;
+    color: #ffffff;
+    font-weight: 600;
+`;
+
+const BackLink = styled(Link)`
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #3a86ff;
+    text-decoration: none;
+    font-size: 14px;
+    &:hover {
+        text-decoration: underline;
+    }
+`;
+
+const ContentWrapper = styled.div`
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+`;
+
+const Card = styled.div`
+    background-color: #1a1a1a;
+    border-radius: 10px;
+    padding: 24px;
+    border: 1px solid #2a2a2a;
+    transition: all 0.3s ease-in-out;
+
+    &:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+    }
+`;
+
+const CardHeader = styled.div`
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+`;
+
+const CardTitle = styled.h2`
+    font-size: 20px;
+    color: #ffffff;
+    font-weight: 600;
+`;
+
+const MenuWrapper = styled.div`
+    position: relative;
+`;
+
+const MenuButton = styled.button`
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #ffffff;
+    padding: 5px;
+
+    &:hover {
+        color: #3a86ff;
+    }
+`;
+
+const Menu = styled.div`
+    position: absolute;
+    right: 0;
+    top: 100%;
+    background-color: #2a2a2a;
+    border-radius: 4px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    z-index: 10;
+`;
+
+const MenuItem = styled.button`
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 10px 15px;
+    background: none;
+    border: none;
+    color: #ffffff;
+    cursor: pointer;
+    text-align: left;
+
+    &:hover {
+        background-color: #3a3a3a;
+    }
+`;
+
+const AppNameRow = styled.div`
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+`;
+
+const AppName = styled.h3`
+    font-size: 24px;
+    color: #f0f0f0;
+    margin: 0;
+`;
+
+const AppStatus = styled.span`
+    padding: 4px 8px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    background-color: ${(props) => {
+        switch (props.status.toLowerCase()) {
+            case "approved":
+                return "rgba(16, 185, 129, 0.2)";
+            case "pending":
+                return "rgba(245, 158, 11, 0.2)";
+            default:
+                return "rgba(239, 68, 68, 0.2)";
+        }
+    }};
+    color: ${(props) => {
+        switch (props.status.toLowerCase()) {
+            case "approved":
+                return "#10b981";
+            case "pending":
+                return "#f59e0b";
+            default:
+                return "#ef4444";
+        }
+    }};
+`;
+
+const DetailGrid = styled.div`
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    margin-bottom: 20px;
+`;
+
+const DetailItem = styled.div`
+    display: flex;
+    flex-direction: column;
+`;
+
+const DetailLabel = styled.span`
+    color: #a0a0a0;
+    font-size: 14px;
+    margin-bottom: 4px;
+`;
+
+const DetailValue = styled.span`
+    color: #ffffff;
+    font-size: 16px;
+    font-weight: 500;
+`;
+
+const CardFooter = styled.div`
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #2a2a2a;
+`;
+
+const RepoLink = styled.a`
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    color: #3a86ff;
+    text-decoration: none;
+    font-size: 14px;
+    transition: color 0.2s;
+
+    &:hover {
+        color: #2f74e0;
+    }
+`;
+
+const CreatedAt = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    color: #6b7280;
+    font-size: 12px;
+`;
+
+const Description = styled.p`
+    margin-top: 20px;
+    color: #a0a0a0;
+    font-size: 14px;
+    line-height: 1.6;
+`;
+
+const EnvironmentList = styled.div`
+    margin-bottom: 24px;
+`;
+
+const EnvironmentItem = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+`;
+
+const EnvInput = styled.input`
+    flex: 1;
+    padding: 10px 12px;
+    background-color: #2a2a2a;
+    border: 1px solid #3a3a3a;
+    border-radius: 6px;
+    color: #ffffff;
+    font-size: 14px;
+
+    &:focus {
+        outline: none;
+        border-color: #3a86ff;
+    }
+`;
+
+const IconButton = styled.button`
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #a0a0a0;
+    padding: 4px;
+    transition: color 0.2s;
+
+    &:hover {
+        color: #ffffff;
+    }
+`;
+
+const AddEnvForm = styled.div`
+    display: flex;
+    gap: 8px;
+    margin-bottom: 24px;
+`;
+
+const AddButton = styled.button`
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 10px 20px;
+    background-color: #2a2a2a;
+    color: #ffffff;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s ease-in-out;
+
+    &:hover {
+        background-color: #3a3a3a;
+        transform: translateY(-2px);
+    }
+
+    &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .animate-spin {
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        from {
+            transform: rotate(0deg);
+        }
+        to {
+            transform: rotate(360deg);
+        }
+    }
+`;
+
+const ActionButtons = styled.div`
+    display: flex;
+    justify-content: flex-end;
+    gap: 16px;
+`;
+
+const SaveButton = styled.button`
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    background-color: #3a86ff;
+    color: #ffffff;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.2s ease-in-out;
+
+    &:hover {
+        background-color: #2f74e0;
+        transform: translateY(-2px);
+    }
+
+    &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+`;
+
+const CancelButton = styled.button`
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    background-color: #2a2a2a;
+    color: #ffffff;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.2s ease-in-out;
+
+    &:hover {
+        background-color: #3a3a3a;
+        transform: translateY(-2px);
+    }
+`;
+
+const ErrorMessage = styled.div`
+    color: #ef4444;
+    background-color: rgba(239, 68, 68, 0.1);
+    border: 1px solid #ef4444;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 24px;
+    text-align: center;
+`;
+
+const SuccessMessage = styled.div`
+    color: #10b981;
+    background-color: rgba(16, 185, 129, 0.1);
+    border: 1px solid #10b981;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 24px;
+    text-align: center;
+`;
+
+const ConfirmModal = styled.div`
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+`;
+
+const ModalContent = styled.div`
+    background-color: #1a1a1a;
+    padding: 24px;
+    border-radius: 10px;
+    text-align: center;
+    max-width: 400px;
+
+    h2 {
+        margin-top: 16px;
+        color: #ffffff;
+    }
+
+    p {
+        margin: 16px 0;
+        color: #a0a0a0;
+    }
+`;
+
+const ModalButtons = styled.div`
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    margin-top: 24px;
+`;
+
+const ConfirmButton = styled.button`
+    padding: 10px 20px;
+    background-color: #ef4444;
+    color: #ffffff;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+
+    &:hover {
+        background-color: #dc2626;
+    }
+`;
+
+const ErrorDisplay = styled.div`
+    color: #ef4444;
+    background-color: rgba(239, 68, 68, 0.1);
+    border: 1px solid #ef4444;
+    border-radius: 8px;
+    padding: 16px;
+    margin: 20px;
+    text-align: center;
+    font-size: 18px;
+    font-weight: bold;
+`;
+
+const HostnameList = styled.div`
+    margin-bottom: 24px;
+`;
+
+const HostnameItem = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    background-color: #2a2a2a;
+    padding: 8px 12px;
+    border-radius: 6px;
+`;
+
+const HostnameText = styled.span`
+    flex: 1;
+    color: #ffffff;
+    font-size: 14px;
+`;
+
+const DeleteButton = styled.button`
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #ef4444;
+    padding: 4px;
+    transition: color 0.2s;
+
+    &:hover {
+        color: #dc2626;
+    }
+`;
+
+const AddHostnameForm = styled.div`
+    display: flex;
+    gap: 8px;
+    margin-bottom: 24px;
+`;
+
+const InfoIcon = styled.button`
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #3a86ff;
+    padding: 4px;
+    transition: color 0.2s;
+
+    &:hover {
+        color: #2f74e0;
+    }
+`;
+
+const InfoBox = styled.div`
+    background-color: rgba(58, 134, 255, 0.1);
+    border: 1px solid #3a86ff;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 24px;
+    font-size: 14px;
+    line-height: 1.5;
+    color: #ffffff;
+
+    strong {
+        color: #3a86ff;
+    }
+`;
+
+export default ApplicationDetailPage;

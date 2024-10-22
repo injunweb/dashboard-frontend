@@ -1,50 +1,187 @@
 import React from "react";
 import { useParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { getUser, getApplications } from "../services/admin.service";
 import styled from "styled-components";
-import { Header } from "../components/Header";
-import { Footer } from "../components/Footer";
-import { Loading } from "../components/Loading";
+import { getUser, getUserApplications } from "../services/admin";
+import Loading from "../components/Loading";
+import {
+    User,
+    Mail,
+    Shield,
+    ArrowLeft,
+    ExternalLink,
+    Globe,
+    Clock,
+} from "lucide-react";
+
+const AdminUserDetailPage = () => {
+    const { userId } = useParams();
+
+    const {
+        data: user,
+        isLoading: isUserLoading,
+        isError: isUserError,
+        error: userError,
+    } = useQuery({
+        queryKey: ["adminUser", userId],
+        queryFn: () => getUser(userId),
+    });
+
+    const {
+        data: applications,
+        isLoading: isAppsLoading,
+        isError: isAppsError,
+        error: appsError,
+    } = useQuery({
+        queryKey: ["adminUserApplications", userId],
+        queryFn: () => getUserApplications(userId),
+    });
+
+    if (isUserLoading || isAppsLoading) return <Loading />;
+    if (isUserError) return <ErrorDisplay message={userError.message} />;
+    if (isAppsError) return <ErrorDisplay message={appsError.message} />;
+
+    return (
+        <Container>
+            <Header>
+                <Title>사용자 상세</Title>
+                <BackLink to="/admin/users">
+                    <ArrowLeft size={16} />
+                    사용자 목록으로 돌아가기
+                </BackLink>
+            </Header>
+            <ContentWrapper>
+                <Card>
+                    <AppNameRow>
+                        <AppName>{user.username}</AppName>
+                        <AdminBadge isAdmin={user.is_admin}>
+                            {user.is_admin ? "관리자" : "일반 사용자"}
+                        </AdminBadge>
+                    </AppNameRow>
+                    <DetailGrid>
+                        <DetailItem>
+                            <DetailLabel>ID</DetailLabel>
+                            <DetailValue>{user.id}</DetailValue>
+                        </DetailItem>
+                        <DetailItem>
+                            <DetailLabel>이메일</DetailLabel>
+                            <DetailValue>{user.email}</DetailValue>
+                        </DetailItem>
+                        <DetailItem>
+                            <DetailLabel>가입일</DetailLabel>
+                            <DetailValue>
+                                {new Date(user.created_at).toLocaleDateString()}
+                            </DetailValue>
+                        </DetailItem>
+                        <DetailItem>
+                            <DetailLabel>마지막 로그인</DetailLabel>
+                            <DetailValue>
+                                {new Date(user.last_login).toLocaleDateString()}
+                            </DetailValue>
+                        </DetailItem>
+                    </DetailGrid>
+                </Card>
+
+                <Card>
+                    <CardTitle>애플리케이션 목록</CardTitle>
+                    {!applications.applications ||
+                    applications.applications.length === 0 ? (
+                        <EmptyState>
+                            이 사용자의 애플리케이션이 없습니다.
+                        </EmptyState>
+                    ) : (
+                        <ApplicationList>
+                            {applications.applications.map((app) => (
+                                <ApplicationItem key={app.id}>
+                                    <AppInfo>
+                                        <AppTitleRow>
+                                            <AppTitle>{app.name}</AppTitle>
+                                            <AppStatus status={app.status}>
+                                                {app.status}
+                                            </AppStatus>
+                                        </AppTitleRow>
+                                        <AppDetails>
+                                            <AppDetail>
+                                                <Globe size={14} />
+                                                {app.primary_hostname}
+                                            </AppDetail>
+                                            <AppDetail>
+                                                <Clock size={14} />
+                                                {new Date(
+                                                    app.created_at
+                                                ).toLocaleDateString()}
+                                            </AppDetail>
+                                        </AppDetails>
+                                        {app.description && (
+                                            <AppDescription>
+                                                {app.description}
+                                            </AppDescription>
+                                        )}
+                                    </AppInfo>
+                                    <AppActions>
+                                        <ViewButton
+                                            to={`/admin/applications/${app.id}`}
+                                        >
+                                            <ExternalLink size={14} />
+                                            상세 보기
+                                        </ViewButton>
+                                    </AppActions>
+                                </ApplicationItem>
+                            ))}
+                        </ApplicationList>
+                    )}
+                </Card>
+            </ContentWrapper>
+        </Container>
+    );
+};
 
 const Container = styled.div`
-    padding: 40px 20px;
-    background-color: var(--dark, #0a0a0a);
-    color: #e0e0e0;
-    min-height: calc(100vh - 60px);
-`;
-
-const ContentWrapper = styled.div`
     max-width: 1000px;
     margin: 0 auto;
-    animation: fadeIn 0.5s ease-out;
+    padding: 40px 20px;
+    color: #ffffff;
+    min-height: 100vh;
+    font-family: "Arial", sans-serif;
+`;
 
-    @keyframes fadeIn {
-        from {
-            opacity: 0;
-        }
-        to {
-            opacity: 1;
-        }
-    }
+const Header = styled.div`
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 40px;
 `;
 
 const Title = styled.h1`
-    font-size: 2.5rem;
-    margin-bottom: 20px;
-    background: linear-gradient(135deg, #1e90ff, #ff007f);
-    -webkit-background-clip: text;
-    color: transparent;
+    font-size: 28px;
+    color: #ffffff;
+    font-weight: 600;
 `;
 
-const Section = styled.div`
-    margin-bottom: 40px;
-    padding: 30px;
-    background-color: rgba(28, 28, 30, 0.6);
-    border-radius: 15px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(10px);
-    transition: transform 0.3s, box-shadow 0.3s;
+const BackLink = styled(Link)`
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #3a86ff;
+    text-decoration: none;
+    font-size: 14px;
+    &:hover {
+        text-decoration: underline;
+    }
+`;
+
+const ContentWrapper = styled.div`
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+`;
+
+const Card = styled.div`
+    background-color: #1a1a1a;
+    border-radius: 10px;
+    padding: 24px;
+    border: 1px solid #2a2a2a;
+    transition: all 0.3s ease-in-out;
 
     &:hover {
         transform: translateY(-5px);
@@ -52,135 +189,187 @@ const Section = styled.div`
     }
 `;
 
-const SectionTitle = styled.h2`
-    font-size: 1.8rem;
+const AppNameRow = styled.div`
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     margin-bottom: 20px;
-    color: #40a9ff;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    padding-bottom: 10px;
 `;
 
-const ApplicationList = styled.ul`
-    list-style: none;
-    padding: 0;
+const AppName = styled.h3`
+    font-size: 24px;
+    color: #f0f0f0;
     margin: 0;
 `;
 
-const ApplicationItem = styled.li`
-    margin: 15px 0;
-    padding: 15px;
-    background-color: rgba(44, 44, 46, 0.6);
-    border-radius: 10px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    transition: transform 0.3s, box-shadow 0.3s;
-
-    &:hover {
-        transform: translateX(5px);
-        box-shadow: 0 5px 15px rgba(30, 144, 255, 0.1);
-    }
+const AdminBadge = styled.span`
+    padding: 4px 8px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    background-color: ${(props) =>
+        props.isAdmin ? "rgba(16, 185, 129, 0.2)" : "rgba(107, 114, 128, 0.2)"};
+    color: ${(props) => (props.isAdmin ? "#10b981" : "#6b7280")};
 `;
 
-const ApplicationLink = styled(Link)`
-    color: #40a9ff;
-    text-decoration: none;
-    font-size: 1.1rem;
-    transition: color 0.3s;
-
-    &:hover {
-        color: #ff69b4;
-    }
+const DetailGrid = styled.div`
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    margin-bottom: 20px;
 `;
 
-const ErrorMessage = styled.p`
-    color: #ff6b6b;
-    background-color: rgba(255, 68, 68, 0.1);
-    padding: 15px;
-    border-radius: 10px;
-    text-align: center;
-    font-size: 1.1rem;
-    margin-top: 20px;
+const DetailItem = styled.div`
+    display: flex;
+    flex-direction: column;
 `;
 
-const NoApplicationsMessage = styled.p`
+const DetailLabel = styled.span`
     color: #a0a0a0;
-    font-style: italic;
+    font-size: 14px;
+    margin-bottom: 4px;
 `;
 
-const UserInfo = styled.p`
-    margin: 10px 0;
-    font-size: 1.1rem;
+const DetailValue = styled.span`
+    color: #ffffff;
+    font-size: 16px;
+    font-weight: 500;
 `;
 
-export const AdminUserDetailPage = () => {
-    const { userId } = useParams();
-    const { data: user, isLoading: userLoading } = useQuery({
-        queryKey: ["user", userId],
-        queryFn: () => getUser(userId),
-    });
-    const { data: applications, isLoading: appLoading } = useQuery({
-        queryKey: ["userApplications", userId],
-        queryFn: () => getApplications(userId),
-        enabled: !!user,
-    });
+const CardTitle = styled.h2`
+    font-size: 20px;
+    color: #ffffff;
+    font-weight: 600;
+    margin-bottom: 20px;
+`;
 
-    if (userLoading || appLoading) return <Loading />;
+const EmptyState = styled.div`
+    color: #a0a0a0;
+    font-size: 14px;
+    text-align: center;
+    padding: 40px;
+    background-color: #2a2a2a;
+    border-radius: 8px;
+`;
 
-    if (!user?.data) {
-        return (
-            <Container>
-                <ContentWrapper>
-                    <Title>User Not Found</Title>
-                    <ErrorMessage>해당 사용자를 찾을 수 없습니다.</ErrorMessage>
-                </ContentWrapper>
-            </Container>
-        );
+const ApplicationList = styled.div`
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+`;
+
+const ApplicationItem = styled.div`
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 16px;
+    background-color: #2a2a2a;
+    border-radius: 8px;
+    transition: all 0.2s ease-in-out;
+
+    &:hover {
+        background-color: #333333;
     }
+`;
 
-    return (
-        <>
-            <Header />
-            <Container>
-                <ContentWrapper>
-                    <Title>USER 상세 정보</Title>
-                    <Section>
-                        <SectionTitle>USER 정보</SectionTitle>
-                        <UserInfo>
-                            <strong>USER ID:</strong> {user.data.id}
-                        </UserInfo>
-                        <UserInfo>
-                            <strong>사용자 이름:</strong> {user.data.username}
-                        </UserInfo>
-                        <UserInfo>
-                            <strong>이메일:</strong> {user.data.email}
-                        </UserInfo>
-                        <UserInfo>
-                            <strong>어드민 여부:</strong>{" "}
-                            {user.data.is_admin ? "예" : "아니요"}
-                        </UserInfo>
-                    </Section>
-                    <Section>
-                        <SectionTitle>어플리케이션 목록</SectionTitle>
-                        {applications?.data?.applications?.length > 0 ? (
-                            <ApplicationList>
-                                {applications.data.applications.map((app) => (
-                                    <ApplicationItem key={app.id}>
-                                        <ApplicationLink
-                                            to={`/admin/applications/${app.id}`}
-                                        >
-                                            {app.name}
-                                        </ApplicationLink>
-                                    </ApplicationItem>
-                                ))}
-                            </ApplicationList>
-                        ) : (
-                            <NoApplicationsMessage>
-                                등록된 어플리케이션이 없습니다.
-                            </NoApplicationsMessage>
-                        )}
-                    </Section>
-                </ContentWrapper>
-            </Container>
-            <Footer />
-        </>
-    );
-};
+const AppInfo = styled.div`
+    flex: 1;
+`;
+
+const AppTitleRow = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+`;
+
+const AppTitle = styled.h3`
+    font-size: 18px;
+    color: #ffffff;
+    margin: 0;
+`;
+
+const AppStatus = styled.span`
+    padding: 4px 8px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    background-color: ${(props) => {
+        switch (props.status.toLowerCase()) {
+            case "approved":
+                return "rgba(16, 185, 129, 0.2)";
+            case "pending":
+                return "rgba(245, 158, 11, 0.2)";
+            default:
+                return "rgba(239, 68, 68, 0.2)";
+        }
+    }};
+    color: ${(props) => {
+        switch (props.status.toLowerCase()) {
+            case "approved":
+                return "#10b981";
+            case "pending":
+                return "#f59e0b";
+            default:
+                return "#ef4444";
+        }
+    }};
+`;
+
+const AppDetails = styled.div`
+    display: flex;
+    gap: 16px;
+    margin-bottom: 8px;
+`;
+
+const AppDetail = styled.span`
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #a0a0a0;
+    font-size: 14px;
+`;
+
+const AppDescription = styled.p`
+    color: #a0a0a0;
+    font-size: 14px;
+    margin: 0;
+    line-height: 1.5;
+`;
+
+const AppActions = styled.div`
+    margin-left: 16px;
+`;
+
+const ViewButton = styled(Link)`
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    background-color: #3a3a3a;
+    color: #ffffff;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    text-decoration: none;
+    transition: all 0.2s ease-in-out;
+
+    &:hover {
+        background-color: #4a4a4a;
+        transform: translateY(-2px);
+    }
+`;
+
+const ErrorDisplay = styled.div`
+    color: #ef4444;
+    background-color: rgba(239, 68, 68, 0.1);
+    border: 1px solid #ef4444;
+    border-radius: 8px;
+    padding: 16px;
+    margin: 20px;
+    text-align: center;
+    font-size: 18px;
+    font-weight: bold;
+`;
+
+export default AdminUserDetailPage;

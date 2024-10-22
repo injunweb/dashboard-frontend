@@ -1,76 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { useMutation } from "@tanstack/react-query";
+import styled, { keyframes } from "styled-components";
 import {
     subscribeToNotifications,
     getVapidPublicKey,
-} from "../services/notification.service";
-import styled from "styled-components";
-
-const PromptContainer = styled.div`
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    background-color: rgba(28, 28, 30, 0.6);
-    color: white;
-    padding: 20px;
-    border-radius: 15px;
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
-    z-index: 1000;
-    display: ${(props) => (props.$isVisible ? "block" : "none")};
-    animation: slideIn 0.5s ease-out;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(10px);
-    max-width: 300px;
-
-    @keyframes slideIn {
-        from {
-            transform: translateY(100%);
-            opacity: 0;
-        }
-        to {
-            transform: translateY(0);
-            opacity: 1;
-        }
-    }
-`;
-
-const PromptText = styled.p`
-    font-size: 1rem;
-    margin-bottom: 15px;
-`;
-
-const SubscribeButton = styled.button`
-    display: inline-block;
-    padding: 10px 20px;
-    font-size: 1rem;
-    background: linear-gradient(135deg, #1e90ff, #ff007f);
-    color: white;
-    border: none;
-    border-radius: 30px;
-    cursor: pointer;
-    transition: transform 0.3s, box-shadow 0.3s;
-
-    &:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 10px 20px rgba(30, 144, 255, 0.3);
-    }
-`;
-
-const CloseButton = styled.button`
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    background: none;
-    border: none;
-    color: white;
-    font-size: 1.2rem;
-    cursor: pointer;
-    transition: color 0.3s;
-
-    &:hover {
-        color: #1e90ff;
-    }
-`;
+} from "../services/notification";
 
 export const SubscriptionPrompt = () => {
     const [isVisible, setIsVisible] = useState(false);
@@ -130,8 +64,7 @@ export const SubscriptionPrompt = () => {
 
             if (permission === "granted") {
                 const vapidPublicKeyResponse = await getVapidPublicKey();
-                const vapidPublicKey =
-                    vapidPublicKeyResponse.data.vapidPublicKey;
+                const vapidPublicKey = vapidPublicKeyResponse.vapidPublicKey;
                 console.log("VAPID public key:", vapidPublicKey);
 
                 const subscription = await swRegistration.pushManager.subscribe(
@@ -169,17 +102,95 @@ export const SubscriptionPrompt = () => {
         return outputArray;
     };
 
-    const handleClose = () => {
-        setIsVisible(false);
-    };
-
     return (
         <PromptContainer $isVisible={isVisible}>
-            <CloseButton onClick={handleClose}>&times;</CloseButton>
-            <PromptText>실시간 알림을 받고 싶으신가요?</PromptText>
-            <SubscribeButton onClick={handleSubscribe}>
-                알림 구독하기
-            </SubscribeButton>
+            <PromptContent>
+                <PromptText>실시간 알림을 받고 싶으신가요?</PromptText>
+                <SubscribeButton onClick={handleSubscribe}>
+                    알림 구독하기
+                </SubscribeButton>
+            </PromptContent>
         </PromptContainer>
     );
 };
+
+const slideIn = keyframes`
+    from {
+        transform: translateY(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+`;
+
+const pulse = keyframes`
+    0% {
+        box-shadow: 0 0 0 0 rgba(30, 144, 255, 0.4);
+    }
+    70% {
+        box-shadow: 0 0 0 15px rgba(30, 144, 255, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(30, 144, 255, 0);
+    }
+`;
+
+const PromptContainer = styled.div`
+    position: fixed;
+    bottom: 25px;
+    right: 25px;
+    background-color: rgba(20, 20, 22, 0.95);
+    color: white;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.3);
+    z-index: 1000;
+    display: ${(props) => (props.$isVisible ? "block" : "none")};
+    animation: ${slideIn} 0.5s ease-out;
+    border: 1px solid rgba(30, 144, 255, 0.3);
+    backdrop-filter: blur(8px);
+    max-width: 350px;
+    overflow: hidden;
+`;
+
+const PromptContent = styled.div`
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+`;
+
+const PromptText = styled.p`
+    font-size: 1.1rem;
+    margin-bottom: 25px;
+    text-align: center;
+    font-weight: 500;
+    line-height: 1.4;
+`;
+
+const SubscribeButton = styled.button`
+    display: inline-block;
+    padding: 14px 28px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    background: linear-gradient(135deg, #1e90ff, #4169e1);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    animation: ${pulse} 2s infinite;
+
+    &:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 20px rgba(30, 144, 255, 0.4);
+        background: linear-gradient(135deg, #4169e1, #1e90ff);
+    }
+
+    &:active {
+        transform: translateY(-1px);
+    }
+`;
+
+export default SubscriptionPrompt;

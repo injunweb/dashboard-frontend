@@ -1,50 +1,100 @@
 import React from "react";
-import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
-import { getUsers } from "../services/admin.service";
+import { useQuery } from "@tanstack/react-query";
 import styled from "styled-components";
-import { Header } from "../components/Header";
-import { Footer } from "../components/Footer";
-import { Loading } from "../components/Loading";
+import { getUsers } from "../services/admin";
+import Loading from "../components/Loading";
+import { User, Mail, ExternalLink } from "lucide-react";
+
+const AdminUserListPage = () => {
+    const { data, isLoading, isError, error } = useQuery({
+        queryKey: ["adminUsers"],
+        queryFn: getUsers,
+    });
+
+    if (isLoading) return <Loading />;
+    if (isError) return <ErrorMessage>에러: {error.message}</ErrorMessage>;
+
+    const users = data?.users || [];
+
+    return (
+        <Container>
+            <Header>
+                <Title>사용자 관리</Title>
+                <UserCount>{users.length} 사용자</UserCount>
+            </Header>
+            {users.length === 0 ? (
+                <EmptyState>사용자가 없습니다.</EmptyState>
+            ) : (
+                <UserGrid>
+                    {users.map((user) => (
+                        <UserCard key={user.id}>
+                            <UserAvatar>
+                                {user.username[0].toUpperCase()}
+                            </UserAvatar>
+                            <UserInfo>
+                                <Username>
+                                    <User size={16} />
+                                    {user.username}
+                                </Username>
+                                <UserEmail>
+                                    <Mail size={16} />
+                                    {user.email}
+                                </UserEmail>
+                            </UserInfo>
+                            <DetailLink to={`/admin/users/${user.id}`}>
+                                상세보기 <ExternalLink size={14} />
+                            </DetailLink>
+                        </UserCard>
+                    ))}
+                </UserGrid>
+            )}
+        </Container>
+    );
+};
 
 const Container = styled.div`
+    max-width: 1200px;
+    margin: 0 auto;
     padding: 40px 20px;
-    background-color: var(--dark, #0a0a0a);
-    color: #e0e0e0; // 밝은 회색으로 변경
-    min-height: calc(100vh - 60px);
+    color: #ffffff;
+    min-height: 100vh;
+    font-family: "Arial", sans-serif;
 `;
 
-const ContentWrapper = styled.div`
-    max-width: 1000px;
-    margin: 0 auto;
-    animation: fadeIn 0.5s ease-out;
-
-    @keyframes fadeIn {
-        from {
-            opacity: 0;
-        }
-        to {
-            opacity: 1;
-        }
-    }
+const Header = styled.div`
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 40px;
 `;
 
 const Title = styled.h1`
-    font-size: 2.5rem;
-    margin-bottom: 20px;
-    background: linear-gradient(135deg, #1e90ff, #ff007f);
-    -webkit-background-clip: text;
-    color: transparent;
+    font-size: 28px;
+    color: #f0f0f0;
+    font-weight: 600;
 `;
 
-const Section = styled.div`
-    margin-bottom: 40px;
-    padding: 30px;
-    background-color: rgba(28, 28, 30, 0.6);
-    border-radius: 15px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(10px);
-    transition: transform 0.3s, box-shadow 0.3s;
+const UserCount = styled.span`
+    font-size: 14px;
+    color: #ffffff;
+    background-color: #333333;
+    padding: 6px 12px;
+    border-radius: 9999px;
+`;
+
+const UserGrid = styled.div`
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 24px;
+`;
+
+const UserCard = styled.div`
+    background-color: #1a1a1a;
+    border-radius: 10px;
+    overflow: hidden;
+    transition: all 0.3s ease-in-out;
+    border: 1px solid #2a2a2a;
 
     &:hover {
         transform: translateY(-5px);
@@ -52,93 +102,76 @@ const Section = styled.div`
     }
 `;
 
-const SectionTitle = styled.h2`
-    font-size: 1.8rem;
-    margin-bottom: 20px;
-    color: #40a9ff; // 더 밝은 파란색으로 변경
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    padding-bottom: 10px;
+const UserAvatar = styled.div`
+    width: 64px;
+    height: 64px;
+    background-color: #333333;
+    color: #ffffff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    font-weight: bold;
+    margin: 20px auto;
 `;
 
-const UserList = styled.ul`
-    list-style: none;
-    padding: 0;
+const UserInfo = styled.div`
+    padding: 0 20px 20px;
+`;
+
+const Username = styled.h2`
+    font-size: 18px;
+    color: #f0f0f0;
+    margin: 0 0 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+`;
+
+const UserEmail = styled.p`
+    font-size: 14px;
+    color: #a0a0a0;
     margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 `;
 
-const UserItem = styled.li`
-    margin: 15px 0;
-    padding: 15px;
-    background-color: rgba(44, 44, 46, 0.6);
-    border-radius: 10px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    transition: transform 0.3s, box-shadow 0.3s;
-
-    &:hover {
-        transform: translateX(5px);
-        box-shadow: 0 5px 15px rgba(30, 144, 255, 0.1);
-    }
-`;
-
-const UserLink = styled(Link)`
-    color: #40a9ff; // 더 밝은 파란색으로 변경
+const DetailLink = styled(Link)`
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    padding: 12px;
+    background-color: #2a2a2a;
+    color: #f0f0f0;
     text-decoration: none;
-    font-size: 1.1rem;
-    transition: color 0.3s;
+    font-size: 14px;
+    transition: background-color 0.2s;
 
     &:hover {
-        color: #ff69b4; // 호버 시 밝은 분홍색으로 변경
+        background-color: #3a3a3a;
     }
 `;
 
-const ErrorMessage = styled.p`
-    color: #ff6b6b; // 더 밝은 빨간색으로 변경
-    background-color: rgba(255, 68, 68, 0.1);
-    padding: 15px;
-    border-radius: 10px;
+const EmptyState = styled.div`
     text-align: center;
-    font-size: 1.1rem;
-    margin-top: 20px;
+    padding: 48px;
+    background-color: #111111;
+    border-radius: 8px;
+    color: #888888;
+    font-size: 18px;
 `;
 
-export const AdminUserListPage = () => {
-    const { data, error, isLoading } = useQuery({
-        queryKey: ["adminUsers"],
-        queryFn: getUsers,
-    });
+const ErrorMessage = styled.div`
+    color: #ff6b6b;
+    background-color: rgba(239, 68, 68, 0.1);
+    border: 1px solid #ff6b6b;
+    border-radius: 8px;
+    padding: 16px;
+    margin-top: 16px;
+    text-align: center;
+`;
 
-    if (isLoading) return <Loading />;
-    if (error) return <ErrorMessage>Error: {error.message}</ErrorMessage>;
-
-    return (
-        <>
-            <Header />
-            <Container>
-                <ContentWrapper>
-                    <Title>USER 목록</Title>
-                    <Section>
-                        <SectionTitle>Users</SectionTitle>
-                        <UserList>
-                            {data?.data?.users?.length ? (
-                                data.data.users.map((user) => (
-                                    <UserItem key={user.id}>
-                                        <UserLink
-                                            to={`/admin/users/${user.id}`}
-                                        >
-                                            {user.username} - {user.email}
-                                        </UserLink>
-                                    </UserItem>
-                                ))
-                            ) : (
-                                <UserItem>
-                                    <p>등록된 사용자가 없습니다.</p>
-                                </UserItem>
-                            )}
-                        </UserList>
-                    </Section>
-                </ContentWrapper>
-            </Container>
-            <Footer />
-        </>
-    );
-};
+export default AdminUserListPage;

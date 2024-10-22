@@ -1,17 +1,18 @@
 import axios from "axios";
-import { Cookie } from "../utils/cookie";
+import { getAuthToken, removeAuthToken } from "../utils/auth";
+import { QueryClient } from "@tanstack/react-query";
+import { Navigate } from "react-router-dom";
 
-export const api = axios.create({
+const api = axios.create({
     baseURL: "https://api.injunweb.com",
 });
 
 api.interceptors.request.use(
     (config) => {
-        const token = Cookie.get("authToken");
+        const token = getAuthToken();
         if (token) {
-            config.headers.Authorization = `Bearer ${token}`;
+            config.headers["Authorization"] = `Bearer ${token}`;
         }
-
         return config;
     },
     (error) => {
@@ -22,20 +23,13 @@ api.interceptors.request.use(
 api.interceptors.response.use(
     (response) => response,
     (error) => {
-        if (error.response) {
-            console.error("Response error:", error.response.data);
-            console.error("Status code:", error.response.status);
-
-            if (error.response.status === 401) {
-                Cookie.remove("authToken");
-                window.location.href = "/login";
-            }
-        } else if (error.request) {
-            console.error("Request error:", error.request);
-        } else {
-            console.error("Error:", error.message);
+        if (error.response && error.response.status === 401) {
+            removeAuthToken();
+            QueryClient.clear();
+            Navigate("/login");
         }
-
         return Promise.reject(error);
     }
 );
+
+export default api;

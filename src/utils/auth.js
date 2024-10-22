@@ -1,23 +1,41 @@
-import { Cookie } from "./cookie";
 import { jwtDecode } from "jwt-decode";
+import { setCookie, getCookie, removeCookie } from "./cookie";
 
-export const isLoggedIn = () => {
-    const token = Cookie.get("authToken");
-    return !!token;
+const TOKEN_KEY = "auth_token";
+
+export const setAuthToken = (token) => {
+    setCookie(TOKEN_KEY, token, { path: "/", maxAge: 7 * 24 * 60 * 60 });
+};
+
+export const getAuthToken = () => {
+    return getCookie(TOKEN_KEY);
+};
+
+export const removeAuthToken = () => {
+    removeCookie(TOKEN_KEY, { path: "/" });
+};
+
+export const isTokenValid = () => {
+    const token = getAuthToken();
+    if (!token) return false;
+
+    try {
+        const decodedToken = jwtDecode(token);
+        const currentTime = Date.now() / 1000;
+        return decodedToken.exp > currentTime;
+    } catch (error) {
+        return false;
+    }
 };
 
 export const isAdmin = () => {
-    const token = Cookie.get("authToken");
-    if (token) {
-        const decoded = jwtDecode(token);
-        return decoded.is_admin;
+    const token = getAuthToken();
+    if (!token) return false;
+
+    try {
+        const decodedToken = jwtDecode(token);
+        return decodedToken.is_admin;
+    } catch (error) {
+        return false;
     }
-    return false;
-};
-
-export const setAuthToken = (token) => {
-    const { exp } = jwtDecode(token);
-    const expires = new Date(exp * 1000);
-
-    Cookie.set("authToken", token, { expires });
 };

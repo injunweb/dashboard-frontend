@@ -1,10 +1,81 @@
 import React from "react";
-import { useMutation } from "@tanstack/react-query";
-import { register } from "../services/auth.service";
-import { Link, useNavigate } from "react-router-dom";
-import styled from "styled-components";
-import { Header } from "../components/Header";
-import { Footer } from "../components/Footer";
+import { Link } from "react-router-dom";
+import { useAuth } from "../hooks/useAuth";
+import styled, { keyframes } from "styled-components";
+
+const RegisterPage = () => {
+    const { register, isRegisterLoading, error } = useAuth();
+
+    const handleSubmit = (event) => {
+        event.preventDefault();
+        const formData = new FormData(event.target);
+        const userData = Object.fromEntries(formData.entries());
+        register(userData);
+    };
+
+    return (
+        <Container>
+            <FloatingElements>
+                <FloatingElement
+                    style={{
+                        width: "300px",
+                        height: "300px",
+                        top: "10%",
+                        left: "10%",
+                    }}
+                />
+                <FloatingElement
+                    style={{
+                        width: "200px",
+                        height: "200px",
+                        top: "60%",
+                        left: "70%",
+                    }}
+                />
+                <FloatingElement
+                    style={{
+                        width: "150px",
+                        height: "150px",
+                        top: "30%",
+                        left: "80%",
+                    }}
+                />
+            </FloatingElements>
+            <ContentWrapper>
+                <Title>인준웹에 회원가입하세요</Title>
+                <Subtitle>당신의 애플리케이션 관리 여정이 시작됩니다!</Subtitle>
+                <Form onSubmit={handleSubmit}>
+                    <Input name="username" placeholder="사용자 이름" required />
+                    <Input
+                        name="email"
+                        type="email"
+                        placeholder="이메일"
+                        required
+                    />
+                    <Input
+                        name="password"
+                        type="password"
+                        placeholder="비밀번호"
+                        required
+                    />
+                    <Button type="submit" disabled={isRegisterLoading}>
+                        {isRegisterLoading ? (
+                            <>
+                                회원가입 중... <Spinner />
+                            </>
+                        ) : (
+                            "회원가입"
+                        )}
+                    </Button>
+                </Form>
+                {error && <Message $error>오류: {error}</Message>}
+                <LoginLink>
+                    이미 계정이 있으신가요? <Link to="/login">로그인</Link>
+                </LoginLink>
+            </ContentWrapper>
+        </Container>
+    );
+};
 
 const Container = styled.div`
     display: flex;
@@ -30,28 +101,19 @@ const FloatingElements = styled.div`
     z-index: 0;
 `;
 
+const float = keyframes`
+    0%, 100% { transform: translate(0, 0); }
+    25% { transform: translate(100px, 100px); }
+    50% { transform: translate(0, 200px); }
+    75% { transform: translate(-100px, 100px); }
+`;
+
 const FloatingElement = styled.div`
     position: absolute;
     background: linear-gradient(135deg, #1e90ff, #ff007f);
     border-radius: 50%;
     opacity: 0.1;
-    animation: float 20s infinite;
-
-    @keyframes float {
-        0%,
-        100% {
-            transform: translate(0, 0);
-        }
-        25% {
-            transform: translate(100px, 100px);
-        }
-        50% {
-            transform: translate(0, 200px);
-        }
-        75% {
-            transform: translate(-100px, 100px);
-        }
-    }
+    animation: ${float} 20s infinite;
 `;
 
 const ContentWrapper = styled.div`
@@ -94,6 +156,7 @@ const Form = styled.form`
     flex-direction: column;
     width: 100%;
     gap: 15px;
+    margin-bottom: 20px;
 `;
 
 const Input = styled.input`
@@ -123,6 +186,9 @@ const Button = styled.button`
     font-size: 16px;
     cursor: pointer;
     transition: transform 0.3s, box-shadow 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 
     &:hover {
         transform: translateY(-3px);
@@ -135,10 +201,25 @@ const Button = styled.button`
     }
 `;
 
+const spin = keyframes`
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+`;
+
+const Spinner = styled.div`
+    width: 20px;
+    height: 20px;
+    border: 2px solid #ffffff;
+    border-top: 2px solid transparent;
+    border-radius: 50%;
+    animation: ${spin} 1s linear infinite;
+    margin-left: 10px;
+`;
+
 const Message = styled.p`
     margin: 10px 0;
     text-align: center;
-    color: ${(props) => (props.error ? "#ff4444" : "#1e90ff")};
+    color: ${(props) => (props.$error ? "#ff4444" : "#1e90ff")};
     animation: slideUp 0.5s ease-out;
 `;
 
@@ -169,86 +250,4 @@ const LoginLink = styled.p`
     }
 `;
 
-export const RegisterPage = () => {
-    const navigate = useNavigate();
-
-    const mutation = useMutation({
-        mutationFn: register,
-        onSuccess: () => {
-            navigate("/login");
-        },
-    });
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        const formData = new FormData(e.target);
-        const userData = Object.fromEntries(formData.entries());
-        mutation.mutate(userData);
-    };
-
-    return (
-        <>
-            <Header />
-            <Container>
-                <FloatingElements>
-                    <FloatingElement
-                        style={{
-                            width: "300px",
-                            height: "300px",
-                            top: "10%",
-                            left: "10%",
-                        }}
-                    />
-                    <FloatingElement
-                        style={{
-                            width: "200px",
-                            height: "200px",
-                            top: "60%",
-                            left: "70%",
-                        }}
-                    />
-                    <FloatingElement
-                        style={{
-                            width: "150px",
-                            height: "150px",
-                            top: "30%",
-                            left: "80%",
-                        }}
-                    />
-                </FloatingElements>
-                <ContentWrapper>
-                    <Title>회원가입</Title>
-                    <Subtitle>인준웹에 오신 것을 환영합니다!</Subtitle>
-                    <Form onSubmit={handleSubmit}>
-                        <Input name="username" placeholder="이름" autoComplete="off" required />
-                        <Input
-                            name="email"
-                            type="email"
-                            placeholder="이메일"
-                            autoComplete="off"
-                            required
-                        />
-                        <Input
-                            name="password"
-                            type="password"
-                            placeholder="비밀번호"
-                            required
-                        />
-                        <Button type="submit" disabled={mutation.isLoading}>
-                            회원가입
-                        </Button>
-                    </Form>
-                    {mutation.isLoading && <Message>등록 중...</Message>}
-                    {mutation.isError && (
-                        <Message $error>오류: {mutation.error.message}</Message>
-                    )}
-                    {mutation.isSuccess && <Message>회원가입 성공!</Message>}
-                    <LoginLink>
-                        이미 계정이 있으신가요? <Link to="/login">로그인</Link>
-                    </LoginLink>
-                </ContentWrapper>
-            </Container>
-            <Footer />
-        </>
-    );
-};
+export default RegisterPage;
