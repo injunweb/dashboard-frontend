@@ -47,7 +47,7 @@ const RegisterPage = () => {
                 <Form onSubmit={handleSubmit}>
                     <Input
                         name="username"
-                        placeholder="사용자 이름 (소문자/숫자/-'._)"
+                        placeholder="사용자 이름 (영소문자/숫자/-'._, 4~8자)"
                         required
                     />
                     <Input
