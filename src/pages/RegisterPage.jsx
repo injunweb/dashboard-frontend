@@ -45,7 +45,11 @@ const RegisterPage = () => {
                 <Title>인준웹에 회원가입하세요</Title>
                 <Subtitle>당신의 애플리케이션 관리 여정이 시작됩니다!</Subtitle>
                 <Form onSubmit={handleSubmit}>
-                    <Input name="username" placeholder="사용자 이름" required />
+                    <Input
+                        name="username"
+                        placeholder="사용자 이름 (소문자/숫자/-'._)"
+                        required
+                    />
                     <Input
                         name="email"
                         type="email"
@@ -55,7 +59,7 @@ const RegisterPage = () => {
                     <Input
                         name="password"
                         type="password"
-                        placeholder="비밀번호"
+                        placeholder="비밀번호 (8자 이상, 영소문자/숫자/특수문자)"
                         required
                     />
                     <Button type="submit" disabled={isRegisterLoading}>
