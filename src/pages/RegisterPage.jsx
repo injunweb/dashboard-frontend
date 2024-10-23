@@ -140,7 +140,7 @@ const ContentWrapper = styled.div`
 `;
 
 const Title = styled.h1`
-    font-size: 2.5rem;
+    font-size: 2.4rem;
     margin-bottom: 10px;
     background: linear-gradient(135deg, #1e90ff, #ff007f);
     -webkit-background-clip: text;
