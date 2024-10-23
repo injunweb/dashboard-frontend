@@ -73,12 +73,6 @@ const AdminUserDetailPage = () => {
                                 {new Date(user.created_at).toLocaleDateString()}
                             </DetailValue>
                         </DetailItem>
-                        <DetailItem>
-                            <DetailLabel>마지막 로그인</DetailLabel>
-                            <DetailValue>
-                                {new Date(user.last_login).toLocaleDateString()}
-                            </DetailValue>
-                        </DetailItem>
                     </DetailGrid>
                 </Card>
 
